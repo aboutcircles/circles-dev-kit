@@ -82,7 +82,7 @@ export default function Home() {
 
         <div className="flex gap-3 flex-wrap justify-center">
           <Link
-            href={siteConfig.links.docs}
+            href='/avatars'
             className={buttonStyles({
               color: "primary",
               radius: "full",
@@ -120,23 +120,6 @@ export default function Home() {
             <FeatureCard key={f.id} feature={f} />
           ))}
         </div>
-
-        {/* Example usage snippet */}
-        <h3 className="text-xl font-semibold mt-16 mb-4">Minimal SDK Init</h3>
-        <Snippet hideCopyButton={false} variant="flat">
-          {`import { CirclesSDK } from "@circles-sdk/sdk";
-import { ethers } from "ethers";
-
-const provider = new ethers.BrowserProvider(window.ethereum);
-const sdk = new CirclesSDK({
-  provider,
-  chainId: 100, // Gnosis Chain
-});
-
-// Example: get total balance
-const balance = await sdk.getTotalBalance("0xYourAddress");
-console.log(balance);`}
-        </Snippet>
       </section>
     </>
   );

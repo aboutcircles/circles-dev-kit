@@ -78,9 +78,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 text-sm text-default-600 md:flex-row">
                   <p>© {year} {siteConfig.name} • Built for the Circles ecosystem</p>
                   <div className="flex items-center gap-4">
-                    <NextLink href={siteConfig.links.docs} className="hover:text-primary">
-                      Docs
-                    </NextLink>
                     <NextLink
                       href={siteConfig.links.github}
                       className="hover:text-primary"
