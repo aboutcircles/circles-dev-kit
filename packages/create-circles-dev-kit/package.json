@@ -1,0 +1,23 @@
+{
+  "name": "create-circles-dev-kit",
+  "version": "1.0.0",
+  "description": "Scaffold a Circles Dev Kit  app from",
+  "type": "module",
+  "bin": {
+    "create-circles-dev-kit": "bin/cli.mjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "keywords": ["scaffold", "create-app", "nextjs", "circles"],
+  "repository": "https://github.com/aboutcircles/circles-dev-kit",
+  "bugs": "https://github.com/aboutcircles/circles-dev-kit/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {}
+}

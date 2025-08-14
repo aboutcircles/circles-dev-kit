@@ -105,7 +105,7 @@ export default function Home() {
         <Snippet hideCopyButton={false} hideSymbol variant="bordered" className="mt-8">
           <span>
             <Code color="primary">
-              npx create-circles-kit@latest
+              npx create-circles-dev-kit@latest
             </Code>
           </span>
         </Snippet>
