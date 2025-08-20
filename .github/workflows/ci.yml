@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [master]
   pull_request:
-    branches: [main, master, develop]
+    branches: [master]
 
 jobs:
   test-and-build:
@@ -43,7 +43,6 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          # Prevent Next.js telemetry during build
           NEXT_TELEMETRY_DISABLED: 1
 
       - name: Cache Next.js build

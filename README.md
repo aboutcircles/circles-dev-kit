@@ -1,5 +1,7 @@
 # Circles Dev Kit 
 
+![](main.png)
+
 A hands-on learning repository for developers to **explore, understand, and build with the Circles SDK**.  
 This app focuses on practical, clickable examples—so you can connect a wallet and immediately try avatar/profile operations, trust graph actions, group mechanics, and JSON‑RPC queries against Circles endpoints.
 
