@@ -84,11 +84,25 @@ Each card shows:
 ```bash
 git clone https://github.com/aboutcircles/circles-dev-kit
 npm install
-pnpm dev
+npm run dev
 # open http://localhost:3000
 ```
 
-> The app uses a `CirclesContext` that wires your Circles SDK instance. Ensure it uses the same chain/RPC (or a custom provider) you intend to use.
+### Prerequisites
+
+- **Gnosis Chain Mainnet**: This app is configured to work **only** on Gnosis Chain mainnet (Chain ID: 100). Make sure your wallet is connected to Gnosis Chain.
+
+### Optional Configuration
+
+- **WalletConnect Support**: To enable WalletConnect as a wallet option, create a `.env.local` file with:
+  ```bash
+  NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+  ```
+  Get your project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/).
+  
+  **Note**: The app works fully without WalletConnect configuration. Available wallet options include MetaMask, Coinbase Wallet, and browser injected wallets.
+
+> The app uses a `CirclesContext` that wires your Circles SDK instance to Gnosis Chain mainnet only.
 
 ---
 

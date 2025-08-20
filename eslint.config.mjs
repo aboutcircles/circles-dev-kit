@@ -67,13 +67,15 @@ export default defineConfig([globalIgnores([
         },
 
         parser: tsParser,
-        ecmaVersion: 12,
+        ecmaVersion: 2022,
         sourceType: "module",
 
         parserOptions: {
             ecmaFeatures: {
                 jsx: true,
             },
+            project: "./tsconfig.json",
+            tsconfigRootDir: __dirname,
         },
     },
 
@@ -87,12 +89,28 @@ export default defineConfig([globalIgnores([
 
     rules: {
         "no-console": "warn",
+        "no-debugger": "warn",
+        "no-alert": "warn",
+        "no-var": "error",
+        "prefer-const": "error",
+        "no-unused-expressions": "error",
+        "no-duplicate-imports": "error",
+        
         "react/prop-types": "off",
         "react/jsx-uses-react": "off",
         "react/react-in-jsx-scope": "off",
-        "react-hooks/exhaustive-deps": "off",
+        "react-hooks/exhaustive-deps": "warn",
+        "react/jsx-key": "error",
+        "react/jsx-no-duplicate-props": "error",
+        "react/jsx-no-undef": "error",
+        "react/no-array-index-key": "warn",
+        "react/no-unescaped-entities": "warn",
+        
         "jsx-a11y/click-events-have-key-events": "warn",
         "jsx-a11y/interactive-supports-focus": "warn",
+        "jsx-a11y/alt-text": "warn",
+        "jsx-a11y/anchor-is-valid": "warn",
+        
         "prettier/prettier": "warn",
         "no-unused-vars": "off",
         "unused-imports/no-unused-vars": "off",
@@ -103,6 +121,8 @@ export default defineConfig([globalIgnores([
             ignoreRestSiblings: false,
             argsIgnorePattern: "^_.*?$",
         }],
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-non-null-assertion": "warn",
 
         "import/order": ["warn", {
             groups: [

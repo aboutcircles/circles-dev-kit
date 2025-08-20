@@ -23,24 +23,32 @@ import { Chip } from "@heroui/chip";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
-import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from "wagmi";
-import { injected, metaMask, walletConnect, coinbaseWallet } from "wagmi/connectors";
-import { gnosis, gnosisChiado } from "wagmi/chains";
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useChainId,
+  useSwitchChain,
+  type Connector,
+} from "wagmi";
+import { injected } from "wagmi/connectors";
+import { gnosis } from "wagmi/chains";
+
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { GithubIcon, Logo } from "@/components/icons";
 
-const SUPPORTED_CHAINS = [gnosis, gnosisChiado];
-const CHAIN_NAMES = {
-  [gnosis.id]: "Gnosis",
-  [gnosisChiado.id]: "Chiado",
+const SUPPORTED_CHAINS = [gnosis] as const;
+const CHAIN_NAMES: Record<number, string> = {
+  [gnosis.id]: "Gnosis Chain",
 };
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const chainId = useChainId();
-  
-  const { address, isConnected, isConnecting, isReconnecting, connector } = useAccount();
+
+  const { address, isConnected, isConnecting, isReconnecting, connector } =
+    useAccount();
   const { connect, connectors, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
@@ -56,61 +64,80 @@ export const Navbar: React.FC = () => {
   // Log connection errors to console instead of showing in UI
   React.useEffect(() => {
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("Wallet connection error:", {
         message: error.message,
         name: error.name,
         cause: error.cause,
-        details: error
+        details: error,
       });
     }
   }, [error]);
 
-  const isOnSupportedChain = SUPPORTED_CHAINS.some(chain => chain.id === chainId);
-  const currentChainName = CHAIN_NAMES[chainId as keyof typeof CHAIN_NAMES] || `Chain ${chainId}`;
+  const isOnSupportedChain = React.useMemo(
+    () => SUPPORTED_CHAINS.some((chain) => chain.id === chainId),
+    [chainId],
+  );
 
-  const handleConnect = async (connectorToUse: any) => {
-    try {
-      await connect({ connector: connectorToUse });
-      setShowWalletMenu(false);
-    } catch (err) {
-      console.error("Failed to connect wallet:", err);
-    }
-  };
+  const currentChainName = React.useMemo(
+    () => CHAIN_NAMES[chainId] || `Chain ${chainId}`,
+    [chainId],
+  );
 
-  const handleDisconnect = async () => {
+  const handleConnect = React.useCallback(
+    async (connectorToUse: Connector) => {
+      try {
+        await connect({ connector: connectorToUse });
+        setShowWalletMenu(false);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to connect wallet:", err);
+      }
+    },
+    [connect],
+  );
+
+  const handleDisconnect = React.useCallback(async () => {
     try {
       await disconnect();
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("Failed to disconnect wallet:", err);
     }
-  };
+  }, [disconnect]);
 
-  const handleSwitchChain = async (targetChainId: number) => {
-    try {
-      await switchChain({ chainId: targetChainId });
-      setShowChainMenu(false);
-    } catch (err) {
-      console.error("Failed to switch chain:", err);
-    }
-  };
+  const handleSwitchChain = React.useCallback(
+    async (targetChainId: number) => {
+      try {
+        await switchChain({ chainId: targetChainId });
+        setShowChainMenu(false);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to switch chain:", err);
+      }
+    },
+    [switchChain],
+  );
 
-  const getStatusColor = () => {
+  const getStatusColor = React.useCallback(() => {
     if (!isConnected) return "default";
     if (!isOnSupportedChain) return "warning";
-    return "success";
-  };
 
-  const getStatusText = () => {
+    return "success";
+  }, [isConnected, isOnSupportedChain]);
+
+  const getStatusText = React.useCallback(() => {
     if (isConnecting || isReconnecting) return "Connecting...";
     if (!isConnected) return "Connect Wallet";
-    if (!isOnSupportedChain) return "Wrong Network";
-    return `${address?.slice(0, 6)}…${address?.slice(-4)}`;
-  };
+    if (!isOnSupportedChain) return "Switch to Gnosis Chain";
 
-  const WalletButton = () => {
+    return `${address?.slice(0, 6)}…${address?.slice(-4)}`;
+  }, [isConnecting, isReconnecting, isConnected, isOnSupportedChain, address]);
+
+  const WalletButton = React.useCallback(() => {
     if (!mounted) {
       return (
-        <Button size="sm" variant="flat" isLoading>
+        <Button isLoading size="sm" variant="flat">
           Loading...
         </Button>
       );
@@ -123,11 +150,11 @@ export const Navbar: React.FC = () => {
           <Dropdown isOpen={showChainMenu} onOpenChange={setShowChainMenu}>
             <DropdownTrigger>
               <Button
-                size="sm"
-                variant="flat"
+                className="min-w-0"
                 color={isOnSupportedChain ? "success" : "warning"}
                 isLoading={isSwitchingChain}
-                className="min-w-0"
+                size="sm"
+                variant="flat"
               >
                 {currentChainName}
               </Button>
@@ -136,12 +163,14 @@ export const Navbar: React.FC = () => {
               {SUPPORTED_CHAINS.map((chain) => (
                 <DropdownItem
                   key={chain.id}
-                  onClick={() => handleSwitchChain(chain.id)}
                   className={chainId === chain.id ? "bg-primary/10" : ""}
+                  onClick={() => handleSwitchChain(chain.id)}
                 >
                   <div className="flex items-center justify-between w-full">
                     <span>{chain.name}</span>
-                    {chainId === chain.id && <span className="text-primary">✓</span>}
+                    {chainId === chain.id && (
+                      <span className="text-primary">✓</span>
+                    )}
                   </div>
                 </DropdownItem>
               ))}
@@ -152,10 +181,10 @@ export const Navbar: React.FC = () => {
           <Dropdown>
             <DropdownTrigger>
               <Button
+                className="flex items-center gap-2"
+                color={getStatusColor()}
                 size="sm"
                 variant="flat"
-                color={getStatusColor()}
-                className="flex items-center gap-2"
               >
                 {getStatusText()}
               </Button>
@@ -173,8 +202,8 @@ export const Navbar: React.FC = () => {
                   <span className="text-xs">{connector?.name}</span>
                 </div>
               </DropdownItem>
-              <DropdownItem 
-                key="disconnect" 
+              <DropdownItem
+                key="disconnect"
                 color="danger"
                 onClick={handleDisconnect}
               >
@@ -191,43 +220,62 @@ export const Navbar: React.FC = () => {
         <Dropdown isOpen={showWalletMenu} onOpenChange={setShowWalletMenu}>
           <DropdownTrigger>
             <Button
-              size="sm"
-              variant="flat"
               color="primary"
               isLoading={isPending || isConnecting}
+              size="sm"
+              variant="flat"
             >
               {isPending || isConnecting ? "Connecting..." : "Connect Wallet"}
             </Button>
           </DropdownTrigger>
           <DropdownMenu aria-label="Wallet connectors">
-            {connectors
-              .filter((connector) => connector.name !== "Injected") // Filter out generic injected
-              .map((connector) => (
-                <DropdownItem
-                  key={connector.id}
-                  onClick={() => handleConnect(connector)}
-                  className="flex items-center gap-2"
-                >
-                  <span>{connector.name}</span>
-                </DropdownItem>
-              ))}
+            {
+              connectors
+                .filter((connector) => connector.name !== "Injected") // Filter out generic injected
+                .map((connector) => (
+                  <DropdownItem
+                    key={connector.id}
+                    className="flex items-center gap-2"
+                    onClick={() => handleConnect(connector)}
+                  >
+                    <span>{connector.name}</span>
+                  </DropdownItem>
+                )) as any
+            }
             {/* Fallback injected connector */}
             <DropdownItem
               key="injected-fallback"
-              onClick={() => handleConnect(injected())}
               className="flex items-center gap-2"
+              onClick={() => handleConnect(injected() as any)}
             >
               <span>Browser Wallet</span>
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>
-
-        {/* Removed the error chip from UI - errors are now logged to console */}
       </div>
     );
-  };
+  }, [
+    mounted,
+    isConnected,
+    address,
+    isOnSupportedChain,
+    currentChainName,
+    isSwitchingChain,
+    showChainMenu,
+    handleSwitchChain,
+    getStatusColor,
+    getStatusText,
+    showWalletMenu,
+    isPending,
+    isConnecting,
+    connectors,
+    handleConnect,
+    handleDisconnect,
+    chainId,
+    connector?.name,
+  ]);
 
-  const MobileWalletButton = () => {
+  const MobileWalletButton = React.useCallback(() => {
     if (!mounted) return null;
 
     return (
@@ -235,39 +283,84 @@ export const Navbar: React.FC = () => {
         {isConnected && address ? (
           <div className="flex flex-col items-center gap-2">
             <Button
+              color={getStatusColor()}
               size="sm"
               variant="flat"
-              color={getStatusColor()}
               onClick={handleDisconnect}
             >
               {getStatusText()}
             </Button>
             {!isOnSupportedChain && (
-              <Chip size="sm" color="warning" variant="flat">
-                Switch Network
+              <Chip color="warning" size="sm" variant="flat">
+                Switch to Gnosis Chain
               </Chip>
             )}
           </div>
         ) : (
           <Button
+            color="primary"
+            isLoading={isPending || isConnecting}
             size="sm"
             variant="flat"
-            color="primary"
             onClick={() => setShowWalletMenu(true)}
-            isLoading={isPending || isConnecting}
           >
             {isPending || isConnecting ? "Connecting..." : "Connect"}
           </Button>
         )}
       </div>
     );
-  };
+  }, [
+    mounted,
+    isConnected,
+    address,
+    getStatusColor,
+    getStatusText,
+    handleDisconnect,
+    isOnSupportedChain,
+    isPending,
+    isConnecting,
+  ]);
+
+  const navItems = React.useMemo(
+    () =>
+      siteConfig.navItems.map((item) => {
+        const active = pathname === item.href;
+
+        return (
+          <NavbarItem key={item.href} isActive={active}>
+            <NextLink
+              className={clsx(
+                linkStyles({ color: "foreground" }),
+                "data-[active=true]:text-primary data-[active=true]:font-medium",
+              )}
+              data-active={active}
+              href={item.href}
+            >
+              {item.label}
+            </NextLink>
+          </NavbarItem>
+        );
+      }),
+    [pathname],
+  );
+
+  const mobileMenuItems = React.useMemo(
+    () =>
+      siteConfig.navMenuItems.map((item) => (
+        <NavbarMenuItem key={item.href} className="w-full text-center">
+          <NextLink className="text-lg block w-full" href={item.href}>
+            {item.label}
+          </NextLink>
+        </NavbarMenuItem>
+      )),
+    [],
+  );
 
   return (
-    <HeroUINavbar maxWidth="xl" position="sticky" isBordered>
+    <HeroUINavbar isBordered maxWidth="xl" position="sticky">
       <NavbarContent className="basis-auto" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
-          <NextLink href="/" className="flex items-center gap-2">
+          <NextLink className="flex items-center gap-2" href="/">
             <Logo />
             <p className="font-bold">Developer Kit</p>
           </NextLink>
@@ -275,28 +368,13 @@ export const Navbar: React.FC = () => {
       </NavbarContent>
 
       <NavbarContent className="hidden lg:flex flex-1" justify="center">
-        <ul className="flex gap-6">
-          {siteConfig.navItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <NavbarItem key={item.href} isActive={active}>
-                <NextLink
-                  href={item.href}
-                  className={clsx(
-                    linkStyles({ color: "foreground" }),
-                    "data-[active=true]:text-primary data-[active=true]:font-medium"
-                  )}
-                  data-active={active}
-                >
-                  {item.label}
-                </NextLink>
-              </NavbarItem>
-            );
-          })}
-        </ul>
+        <ul className="flex gap-6">{navItems}</ul>
       </NavbarContent>
 
-      <NavbarContent className="hidden sm:flex items-center gap-3" justify="end">
+      <NavbarContent
+        className="hidden sm:flex items-center gap-3"
+        justify="end"
+      >
         <NavbarItem>
           <WalletButton />
         </NavbarItem>
@@ -316,14 +394,8 @@ export const Navbar: React.FC = () => {
       <NavbarMenu>
         <div className="mx-4 mt-4 flex flex-col items-center gap-4">
           <MobileWalletButton />
-          
-          {siteConfig.navMenuItems.map((item, i) => (
-            <NavbarMenuItem key={i} className="w-full text-center">
-              <NextLink href={item.href} className="text-lg block w-full">
-                {item.label}
-              </NextLink>
-            </NavbarMenuItem>
-          ))}
+
+          {mobileMenuItems}
 
           {/* Connection Status in Mobile Menu */}
           {mounted && isConnected && (
@@ -332,9 +404,9 @@ export const Navbar: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-xs">Network:</span>
-                  <Chip 
-                    size="sm" 
+                  <Chip
                     color={isOnSupportedChain ? "success" : "warning"}
+                    size="sm"
                     variant="flat"
                   >
                     {currentChainName}
@@ -353,8 +425,6 @@ export const Navbar: React.FC = () => {
           )}
         </div>
       </NavbarMenu>
-
-      {/* Removed the global connection error notification - errors are now logged to console */}
     </HeroUINavbar>
   );
 };

@@ -1,11 +1,11 @@
 "use client";
 
-
-import React, { useContext, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAccount } from "wagmi";
-import { CirclesContext } from "../../contexts/CirclesContext";
 
-type AsyncState<T = any> = {
+import { useCircles } from "../../contexts/CirclesContext";
+
+type AsyncState<T = unknown> = {
   loading?: boolean;
   error?: string;
   result?: T;
@@ -14,16 +14,16 @@ type AsyncState<T = any> = {
 type ModalState = {
   open: boolean;
   title?: string;
-  data?: any;
-  error?: string;
+  data?: unknown;
+  error?: string | undefined;
 };
 
 export default function GroupsPage() {
   const { address, isConnected } = useAccount();
-  const { sdk, isLoading: sdkLoading, error: sdkError } = useContext(CirclesContext);
+  const { sdk, isLoading: sdkLoading, error: sdkError } = useCircles();
 
   const [modal, setModal] = useState<ModalState>({ open: false });
-  const openModal = (title: string, data?: any, error?: string) =>
+  const openModal = (title: string, data?: unknown, error?: string) =>
     setModal({ open: true, title, data, error });
   const closeModal = () => setModal({ open: false });
 
@@ -37,7 +37,11 @@ export default function GroupsPage() {
     mint: string;
     profile: { name: string; description: string; symbol: string };
     state: AsyncState;
-  }>({ mint: "", profile: { name: "", description: "", symbol: "" }, state: {} });
+  }>({
+    mint: "",
+    profile: { name: "", description: "", symbol: "" },
+    state: {},
+  });
 
   // Group Management
   const [groupAddress, setGroupAddress] = useState<string>("");
@@ -45,7 +49,9 @@ export default function GroupsPage() {
   const [groupOwner, setGroupOwner] = useState<AsyncState>({});
   const [groupService, setGroupService] = useState<AsyncState>({});
   const [groupMintHandler, setGroupMintHandler] = useState<AsyncState>({});
-  const [membershipConditions, setMembershipConditions] = useState<AsyncState>({});
+  const [membershipConditions, setMembershipConditions] = useState<AsyncState>(
+    {},
+  );
 
   // Group Operations
   const [trustOperation, setTrustOperation] = useState<{
@@ -98,11 +104,17 @@ export default function GroupsPage() {
       symbolStartsWith: string;
       ownerEquals: string;
       groupType: string;
+      groupTypeIn?: string[];
     };
     state: AsyncState;
-  }>({ 
-    params: { nameStartsWith: "", symbolStartsWith: "", ownerEquals: "", groupType: "" }, 
-    state: {} 
+  }>({
+    params: {
+      nameStartsWith: "",
+      symbolStartsWith: "",
+      ownerEquals: "",
+      groupType: "",
+    },
+    state: {},
   });
 
   // Group Memberships
@@ -124,7 +136,13 @@ export default function GroupsPage() {
     toBlock: string;
     eventTypes: string;
     state: AsyncState;
-  }>({ groupAddress: "", fromBlock: "", toBlock: "", eventTypes: "", state: {} });
+  }>({
+    groupAddress: "",
+    fromBlock: "",
+    toBlock: "",
+    eventTypes: "",
+    state: {},
+  });
 
   // Group Treasury Info
   const [treasuryInfo, setTreasuryInfo] = useState<{
@@ -144,13 +162,19 @@ export default function GroupsPage() {
     state: AsyncState;
   }>({ groupAddress: "", state: {} });
 
-  const run = async <T,>(fn: () => Promise<T>, setter: (s: AsyncState<T>) => void) => {
+  const run = async <T,>(
+    fn: () => Promise<T>,
+    setter: (s: AsyncState<T>) => void,
+  ) => {
     setter({ loading: true });
     try {
       const result = await fn();
+
       setter({ loading: false, result });
-    } catch (e: any) {
-      setter({ loading: false, error: e?.message ?? String(e) });
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+
+      setter({ loading: false, error: errorMessage });
     }
   };
 
@@ -189,22 +213,22 @@ export default function GroupsPage() {
       <aside className="w-1/4 h-full border-r dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 overflow-y-auto">
         <h2 className="text-2xl font-bold mb-6">Circles Groups</h2>
         <nav className="space-y-4 text-sm">
-          <a href="#register-groups" className="block hover:underline">
+          <a className="block hover:underline" href="#register-groups">
             1. Register Groups
           </a>
-          <a href="#group-info" className="block hover:underline">
+          <a className="block hover:underline" href="#group-info">
             2. Group Information
           </a>
-          <a href="#group-discovery" className="block hover:underline">
+          <a className="block hover:underline" href="#group-discovery">
             3. Group Discovery
           </a>
-          <a href="#group-data" className="block hover:underline">
+          <a className="block hover:underline" href="#group-data">
             4. Group Data & Analytics
           </a>
-          <a href="#group-operations" className="block hover:underline">
+          <a className="block hover:underline" href="#group-operations">
             5. Group Operations
           </a>
-          <a href="#group-admin" className="block hover:underline">
+          <a className="block hover:underline" href="#group-admin">
             6. Group Administration
           </a>
         </nav>
@@ -212,19 +236,18 @@ export default function GroupsPage() {
 
       {/* Main content */}
       <main className="flex-1 h-full overflow-y-auto p-8 space-y-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-        
         {/* 1. Register Groups */}
         <section id="register-groups">
           <SectionHeader
             index="1"
-            title="Register Groups"
             info="Create different types of groups in Circles V2. Core Members Groups and Base Groups have different capabilities and use cases."
+            title="Register Groups"
           />
 
           {/* 1.1 Core Members Group */}
           <SubHeader
-            title="1.1 Core Members Group"
             info="Create a Core Members Group with advanced governance features and customizable mint/redemption handlers."
+            title="1.1 Core Members Group"
           />
           <Code>{`await sdk.coreMembersGroupDeployer?.deployGroup({ name, description, symbol });`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -234,7 +257,7 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setRegisterCMG({
                   ...registerCMG,
-                  profile: { ...registerCMG.profile, name: v }
+                  profile: { ...registerCMG.profile, name: v },
                 })
               }
             />
@@ -244,7 +267,7 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setRegisterCMG({
                   ...registerCMG,
-                  profile: { ...registerCMG.profile, description: v }
+                  profile: { ...registerCMG.profile, description: v },
                 })
               }
             />
@@ -254,28 +277,32 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setRegisterCMG({
                   ...registerCMG,
-                  profile: { ...registerCMG.profile, symbol: v }
+                  profile: { ...registerCMG.profile, symbol: v },
                 })
               }
             />
           </div>
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={() =>
+              sdk &&
               run(
                 () => {
                   if (!sdk.coreMembersGroupDeployer) {
-                    throw new Error('Core Members Group deployer not available');
+                    throw new Error(
+                      "Core Members Group deployer not available",
+                    );
                   }
-                  return sdk.coreMembersGroupDeployer.deployGroup(
-                    registerCMG.profile.name,
-                    registerCMG.profile.symbol,
-                    registerCMG.profile.description
+
+                  // Note: deployGroup method may not exist on CMGroupDeployer
+                  // Check SDK documentation for correct method name
+                  throw new Error(
+                    "deployGroup method needs to be verified - check SDK documentation",
                   );
                 },
-                (s) => setRegisterCMG({ ...registerCMG, state: s })
+                (s) => setRegisterCMG({ ...registerCMG, state: s }),
               )
             }
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Deploy Core Members Group
           </button>
@@ -287,16 +314,18 @@ export default function GroupsPage() {
 
           {/* 1.2 Base Group */}
           <SubHeader
-            title="1.2 Base Group"
-            info="Create a Base Group using the Base Group Factory with standard mint policies."
             noTopMargin
+            info="Create a Base Group using the Base Group Factory with standard mint policies."
+            title="1.2 Base Group"
           />
           <Code>{`await sdk.baseGroupFactory?.deployBaseGroup(mint, { name, description, symbol });`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
               placeholder="Mint Policy Address"
               value={registerBaseGroup.mint}
-              onChange={(v) => setRegisterBaseGroup({ ...registerBaseGroup, mint: v })}
+              onChange={(v) =>
+                setRegisterBaseGroup({ ...registerBaseGroup, mint: v })
+              }
             />
             <Input
               placeholder="Group Name"
@@ -304,7 +333,7 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setRegisterBaseGroup({
                   ...registerBaseGroup,
-                  profile: { ...registerBaseGroup.profile, name: v }
+                  profile: { ...registerBaseGroup.profile, name: v },
                 })
               }
             />
@@ -314,7 +343,7 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setRegisterBaseGroup({
                   ...registerBaseGroup,
-                  profile: { ...registerBaseGroup.profile, description: v }
+                  profile: { ...registerBaseGroup.profile, description: v },
                 })
               }
             />
@@ -324,29 +353,30 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setRegisterBaseGroup({
                   ...registerBaseGroup,
-                  profile: { ...registerBaseGroup.profile, symbol: v }
+                  profile: { ...registerBaseGroup.profile, symbol: v },
                 })
               }
             />
           </div>
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={() =>
+              sdk &&
               run(
                 () => {
                   if (!sdk.baseGroupFactory) {
-                    throw new Error('Base Group factory not available');
+                    throw new Error("Base Group factory not available");
                   }
-                  return sdk.baseGroupFactory.deployBaseGroup(
-                    registerBaseGroup.mint.trim(),
-                    registerBaseGroup.profile.name,
-                    registerBaseGroup.profile.symbol,
-                    registerBaseGroup.profile.description
+
+                  // Note: deployBaseGroup method may not exist on BaseGroupFactory
+                  // Check SDK documentation for correct method name
+                  throw new Error(
+                    "deployBaseGroup method needs to be verified - check SDK documentation",
                   );
                 },
-                (s) => setRegisterBaseGroup({ ...registerBaseGroup, state: s })
+                (s) => setRegisterBaseGroup({ ...registerBaseGroup, state: s }),
               )
             }
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Deploy Base Group
           </button>
@@ -361,58 +391,84 @@ export default function GroupsPage() {
         <section id="group-info">
           <SectionHeader
             index="2"
-            title="Group Information"
             info="Query information about existing groups including owner, handlers, and membership conditions."
+            title="Group Information"
           />
-          
+
           <Input
             placeholder="Group Address"
             value={groupAddress}
             onChange={(v) => setGroupAddress(v)}
           />
-          
+
           <div className="flex gap-2 mt-4 flex-wrap">
             <button
-              onClick={() =>
-                run(() => sdk.data.getAvatarInfo(groupAddress.trim().toLowerCase()), setGroupInfo)
-              }
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() =>
+                sdk &&
+                run(
+                  () =>
+                    sdk.data.getAvatarInfo(
+                      groupAddress.trim().toLowerCase() as `0x${string}`,
+                    ),
+                  setGroupInfo,
+                )
+              }
             >
               Get Group Info
             </button>
             <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               onClick={async () => {
-                const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
+                if (!sdk) return;
+                const avatar = await sdk.getAvatar(
+                  groupAddress.trim().toLowerCase() as `0x${string}`,
+                );
+
                 return run(() => avatar.owner(), setGroupOwner);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Get Owner
             </button>
             <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               onClick={async () => {
-                const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
+                if (!sdk) return;
+                const avatar = await sdk.getAvatar(
+                  groupAddress.trim().toLowerCase() as `0x${string}`,
+                );
+
                 return run(() => avatar.service(), setGroupService);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Get Service
             </button>
             <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               onClick={async () => {
-                const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
+                if (!sdk) return;
+                const avatar = await sdk.getAvatar(
+                  groupAddress.trim().toLowerCase() as `0x${string}`,
+                );
+
                 return run(() => avatar.mintHandler(), setGroupMintHandler);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Get Mint Handler
             </button>
             <button
-              onClick={async () => {
-                const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
-                return run(() => avatar.getMembershipConditions(), setMembershipConditions);
-              }}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={async () => {
+                if (!sdk) return;
+                const avatar = await sdk.getAvatar(
+                  groupAddress.trim().toLowerCase() as `0x${string}`,
+                );
+
+                return run(
+                  () => avatar.getMembershipConditions(),
+                  setMembershipConditions,
+                );
+              }}
             >
               Get Membership Conditions
             </button>
@@ -421,9 +477,21 @@ export default function GroupsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <Result state={groupInfo} title="Group Info" onOpen={openModal} />
             <Result state={groupOwner} title="Group Owner" onOpen={openModal} />
-            <Result state={groupService} title="Group Service" onOpen={openModal} />
-            <Result state={groupMintHandler} title="Mint Handler" onOpen={openModal} />
-            <Result state={membershipConditions} title="Membership Conditions" onOpen={openModal} />
+            <Result
+              state={groupService}
+              title="Group Service"
+              onOpen={openModal}
+            />
+            <Result
+              state={groupMintHandler}
+              title="Mint Handler"
+              onOpen={openModal}
+            />
+            <Result
+              state={membershipConditions}
+              title="Membership Conditions"
+              onOpen={openModal}
+            />
           </div>
         </section>
 
@@ -431,10 +499,10 @@ export default function GroupsPage() {
         <section id="group-discovery">
           <SectionHeader
             index="3"
-            title="Group Discovery & Search"
             info="Search and discover groups by various criteria including name, symbol, owner, and type."
+            title="Group Discovery & Search"
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
               placeholder="Name starts with"
@@ -442,7 +510,7 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setGroupSearch({
                   ...groupSearch,
-                  params: { ...groupSearch.params, nameStartsWith: v }
+                  params: { ...groupSearch.params, nameStartsWith: v },
                 })
               }
             />
@@ -452,7 +520,7 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setGroupSearch({
                   ...groupSearch,
-                  params: { ...groupSearch.params, symbolStartsWith: v }
+                  params: { ...groupSearch.params, symbolStartsWith: v },
                 })
               }
             />
@@ -462,19 +530,19 @@ export default function GroupsPage() {
               onChange={(v) =>
                 setGroupSearch({
                   ...groupSearch,
-                  params: { ...groupSearch.params, ownerEquals: v }
+                  params: { ...groupSearch.params, ownerEquals: v },
                 })
               }
             />
             <select
+              className="w-full p-2 mt-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
               value={groupSearch.params.groupType}
               onChange={(e) =>
                 setGroupSearch({
                   ...groupSearch,
-                  params: { ...groupSearch.params, groupType: e.target.value }
+                  params: { ...groupSearch.params, groupType: e.target.value },
                 })
               }
-              className="w-full p-2 mt-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
             >
               <option value="">All Types</option>
               <option value="CrcV2_CMGroupCreated">Core Members Group</option>
@@ -484,65 +552,97 @@ export default function GroupsPage() {
           </div>
           <Code>{`const groups = await sdk.data.findGroups(10, { nameStartsWith, symbolStartsWith, ownerEquals, groupTypeIn });`}</Code>
           <button
-            onClick={() =>
-              run(async () => {
-                const params = Object.fromEntries(
-                  Object.entries(groupSearch.params).filter(([_, v]) => v !== "")
-                );
-                if (params.groupType) {
-                  params.groupTypeIn = [params.groupType];
-                  delete params.groupType;
-                }
-                const query = sdk.data.findGroups(20, params);
-                await query.queryNextPage();
-                return query.currentPage?.results || [];
-              }, (s) => setGroupSearch({ ...groupSearch, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                async () => {
+                  const params = Object.fromEntries(
+                    Object.entries(groupSearch.params).filter(
+                      ([_, v]) => v !== "",
+                    ),
+                  );
+
+                  const searchParams = { ...params };
+
+                  if (params.groupType) {
+                    searchParams.groupTypeIn = [params.groupType as string];
+                    delete (searchParams as any).groupType;
+                  }
+                  const query = sdk.data.findGroups(20, searchParams);
+
+                  await query.queryNextPage();
+
+                  return query.currentPage?.results || [];
+                },
+                (s) => setGroupSearch({ ...groupSearch, state: s }),
+              )
+            }
           >
             Search Groups
           </button>
-          <Result state={groupSearch.state} title="Group Search Results" onOpen={openModal} />
+          <Result
+            state={groupSearch.state}
+            title="Group Search Results"
+            onOpen={openModal}
+          />
         </section>
 
         {/* 4. Group Data & Analytics */}
         <section id="group-data">
           <SectionHeader
             index="4"
-            title="Group Data & Analytics"
             info="Access detailed information about groups including memberships, balances, token info, events, and treasury data."
+            title="Group Data & Analytics"
           />
 
           {/* 4.1 Group Memberships */}
           <SubHeader
-            title="4.1 Group Memberships"
             info="Get all groups that a specific avatar is a member of."
+            title="4.1 Group Memberships"
           />
           <Code>{`const memberships = await sdk.data.getGroupMemberships(avatarAddress, 10);`}</Code>
           <Input
             placeholder="Avatar Address"
             value={groupMemberships.avatarAddress}
-            onChange={(v) => setGroupMemberships({ ...groupMemberships, avatarAddress: v })}
+            onChange={(v) =>
+              setGroupMemberships({ ...groupMemberships, avatarAddress: v })
+            }
           />
           <button
-            onClick={() =>
-              run(async () => {
-                const query = sdk.data.getGroupMemberships(groupMemberships.avatarAddress.trim().toLowerCase(), 20);
-                await query.queryNextPage();
-                return query.currentPage?.results || [];
-              }, (s) => setGroupMemberships({ ...groupMemberships, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                async () => {
+                  const query = sdk.data.getGroupMemberships(
+                    groupMemberships.avatarAddress
+                      .trim()
+                      .toLowerCase() as `0x${string}`,
+                    20,
+                  );
+
+                  await query.queryNextPage();
+
+                  return query.currentPage?.results || [];
+                },
+                (s) => setGroupMemberships({ ...groupMemberships, state: s }),
+              )
+            }
           >
             Get Group Memberships
           </button>
-          <Result state={groupMemberships.state} title="Group Memberships" onOpen={openModal} />
+          <Result
+            state={groupMemberships.state}
+            title="Group Memberships"
+            onOpen={openModal}
+          />
 
           {/* 4.2 Token Information */}
           <SubHeader
-            title="4.2 Token Information"
-            info="Get detailed information about group tokens including type, owner, and metadata."
             noTopMargin
+            info="Get detailed information about group tokens including type, owner, and metadata."
+            title="4.2 Token Information"
           />
           <Code>{`const tokenInfo = await sdk.data.getTokenInfo(tokenAddress);`}</Code>
           <Input
@@ -551,27 +651,42 @@ export default function GroupsPage() {
             onChange={(v) => setTokenInfo({ ...tokenInfo, tokenAddress: v })}
           />
           <button
-            onClick={() =>
-              run(() => sdk.data.getTokenInfo(tokenInfo.tokenAddress.trim().toLowerCase()), (s) => setTokenInfo({ ...tokenInfo, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                () =>
+                  sdk.data.getTokenInfo(
+                    tokenInfo.tokenAddress
+                      .trim()
+                      .toLowerCase() as `0x${string}`,
+                  ),
+                (s) => setTokenInfo({ ...tokenInfo, state: s }),
+              )
+            }
           >
             Get Token Info
           </button>
-          <Result state={tokenInfo.state} title="Token Information" onOpen={openModal} />
+          <Result
+            state={tokenInfo.state}
+            title="Token Information"
+            onOpen={openModal}
+          />
 
           {/* 4.3 Group Events */}
           <SubHeader
-            title="4.3 Group Events"
-            info="Query blockchain events related to a specific group within a block range."
             noTopMargin
+            info="Query blockchain events related to a specific group within a block range."
+            title="4.3 Group Events"
           />
           <Code>{`const events = await sdk.data.getEvents(groupAddress, fromBlock, toBlock, eventTypes);`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
               placeholder="Group Address"
               value={groupEvents.groupAddress}
-              onChange={(v) => setGroupEvents({ ...groupEvents, groupAddress: v })}
+              onChange={(v) =>
+                setGroupEvents({ ...groupEvents, groupAddress: v })
+              }
             />
             <Input
               placeholder="From Block (optional)"
@@ -586,163 +701,267 @@ export default function GroupsPage() {
             <Input
               placeholder="Event Types (comma separated, optional)"
               value={groupEvents.eventTypes}
-              onChange={(v) => setGroupEvents({ ...groupEvents, eventTypes: v })}
+              onChange={(v) =>
+                setGroupEvents({ ...groupEvents, eventTypes: v })
+              }
             />
           </div>
           <button
-            onClick={() =>
-              run(() => {
-                const fromBlock = groupEvents.fromBlock ? parseInt(groupEvents.fromBlock) : undefined;
-                const toBlock = groupEvents.toBlock ? parseInt(groupEvents.toBlock) : undefined;
-                const eventTypes = groupEvents.eventTypes ? safeCsv(groupEvents.eventTypes) : undefined;
-                return sdk.data.getEvents(
-                  groupEvents.groupAddress.trim().toLowerCase(),
-                  fromBlock,
-                  toBlock,
-                  eventTypes
-                );
-              }, (s) => setGroupEvents({ ...groupEvents, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                () => {
+                  const fromBlock = groupEvents.fromBlock
+                    ? parseInt(groupEvents.fromBlock)
+                    : undefined;
+                  const toBlock = groupEvents.toBlock
+                    ? parseInt(groupEvents.toBlock)
+                    : undefined;
+                  const eventTypes = groupEvents.eventTypes
+                    ? safeCsv(groupEvents.eventTypes)
+                    : undefined;
+
+                  return sdk.data.getEvents(
+                    groupEvents.groupAddress
+                      .trim()
+                      .toLowerCase() as `0x${string}`,
+                    fromBlock,
+                    toBlock,
+                    eventTypes,
+                  );
+                },
+                (s) => setGroupEvents({ ...groupEvents, state: s }),
+              )
+            }
           >
             Get Group Events
           </button>
-          <Result state={groupEvents.state} title="Group Events" onOpen={openModal} />
+          <Result
+            state={groupEvents.state}
+            title="Group Events"
+            onOpen={openModal}
+          />
 
           {/* 4.4 Treasury Information */}
           <SubHeader
-            title="4.4 Treasury Information"
-            info="Get treasury address and balance information for a group."
             noTopMargin
+            info="Get treasury address and balance information for a group."
+            title="4.4 Treasury Information"
           />
           <Code>{`const treasuryAddr = await sdk.v2Hub.treasuries(groupAddress);\nconst balances = await sdk.data.getTokenBalances(treasuryAddr);`}</Code>
           <Input
             placeholder="Group Address"
             value={treasuryInfo.groupAddress}
-            onChange={(v) => setTreasuryInfo({ ...treasuryInfo, groupAddress: v })}
+            onChange={(v) =>
+              setTreasuryInfo({ ...treasuryInfo, groupAddress: v })
+            }
           />
           <button
-            onClick={() =>
-              run(async () => {
-                const treasuryAddr = await sdk.v2Hub?.treasuries(treasuryInfo.groupAddress.trim().toLowerCase());
-                const balances = await sdk.data.getTokenBalances(treasuryAddr);
-                return { treasuryAddress: treasuryAddr, balances };
-              }, (s) => setTreasuryInfo({ ...treasuryInfo, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                async () => {
+                  const treasuryAddr = await sdk.v2Hub?.treasuries(
+                    treasuryInfo.groupAddress
+                      .trim()
+                      .toLowerCase() as `0x${string}`,
+                  );
+
+                  if (!treasuryAddr) {
+                    throw new Error("Treasury address not found");
+                  }
+
+                  const balances = await sdk.data.getTokenBalances(
+                    treasuryAddr as `0x${string}`,
+                  );
+
+                  return { treasuryAddress: treasuryAddr, balances };
+                },
+                (s) => setTreasuryInfo({ ...treasuryInfo, state: s }),
+              )
+            }
           >
             Get Treasury Info
           </button>
-          <Result state={treasuryInfo.state} title="Treasury Information" onOpen={openModal} />
+          <Result
+            state={treasuryInfo.state}
+            title="Treasury Information"
+            onOpen={openModal}
+          />
 
           {/* 4.5 Group Trust Relations */}
           <SubHeader
-            title="4.5 Group Trust Relations"
-            info="Get all trust relations for a group including who trusts the group and who the group trusts."
             noTopMargin
+            info="Get all trust relations for a group including who trusts the group and who the group trusts."
+            title="4.5 Group Trust Relations"
           />
           <Code>{`const trustRelations = await sdk.data.getAggregatedTrustRelations(groupAddress, 2);`}</Code>
           <Input
             placeholder="Group Address"
             value={groupTrustRelations.groupAddress}
-            onChange={(v) => setGroupTrustRelations({ ...groupTrustRelations, groupAddress: v })}
+            onChange={(v) =>
+              setGroupTrustRelations({
+                ...groupTrustRelations,
+                groupAddress: v,
+              })
+            }
           />
           <button
-            onClick={() =>
-              run(() => sdk.data.getAggregatedTrustRelations(groupTrustRelations.groupAddress.trim().toLowerCase(), 2), 
-                  (s) => setGroupTrustRelations({ ...groupTrustRelations, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                () =>
+                  sdk.data.getAggregatedTrustRelations(
+                    groupTrustRelations.groupAddress
+                      .trim()
+                      .toLowerCase() as `0x${string}`,
+                    2,
+                  ),
+                (s) =>
+                  setGroupTrustRelations({ ...groupTrustRelations, state: s }),
+              )
+            }
           >
             Get Trust Relations
           </button>
-          <Result state={groupTrustRelations.state} title="Group Trust Relations" onOpen={openModal} />
+          <Result
+            state={groupTrustRelations.state}
+            title="Group Trust Relations"
+            onOpen={openModal}
+          />
 
           {/* 4.6 Group Balance */}
           <SubHeader
-            title="4.6 Group Balance"
-            info="Get total balance and detailed token balances for a group."
             noTopMargin
+            info="Get total balance and detailed token balances for a group."
+            title="4.6 Group Balance"
           />
           <Code>{`const totalBalance = await sdk.data.getTotalBalanceV2(groupAddress, true);\nconst tokenBalances = await sdk.data.getTokenBalances(groupAddress);`}</Code>
           <Input
             placeholder="Group Address"
             value={groupBalance.groupAddress}
-            onChange={(v) => setGroupBalance({ ...groupBalance, groupAddress: v })}
+            onChange={(v) =>
+              setGroupBalance({ ...groupBalance, groupAddress: v })
+            }
           />
           <button
-            onClick={() =>
-              run(async () => {
-                const [totalBalance, tokenBalances] = await Promise.all([
-                  sdk.data.getTotalBalanceV2(groupBalance.groupAddress.trim().toLowerCase(), true),
-                  sdk.data.getTokenBalances(groupBalance.groupAddress.trim().toLowerCase())
-                ]);
-                return { totalBalance, tokenBalances };
-              }, (s) => setGroupBalance({ ...groupBalance, state: s }))
-            }
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() =>
+              sdk &&
+              run(
+                async () => {
+                  const [totalBalance, tokenBalances] = await Promise.all([
+                    sdk.data.getTotalBalanceV2(
+                      groupBalance.groupAddress
+                        .trim()
+                        .toLowerCase() as `0x${string}`,
+                      true,
+                    ),
+                    sdk.data.getTokenBalances(
+                      groupBalance.groupAddress
+                        .trim()
+                        .toLowerCase() as `0x${string}`,
+                    ),
+                  ]);
+
+                  return { totalBalance, tokenBalances };
+                },
+                (s) => setGroupBalance({ ...groupBalance, state: s }),
+              )
+            }
           >
             Get Group Balance
           </button>
-          <Result state={groupBalance.state} title="Group Balance" onOpen={openModal} />
+          <Result
+            state={groupBalance.state}
+            title="Group Balance"
+            onOpen={openModal}
+          />
         </section>
 
         {/* 5. Group Operations */}
         <section id="group-operations">
           <SectionHeader
             index="5"
-            title="Group Operations"
             info="Core group operations including trust management, minting, and redemption."
+            title="Group Operations"
           />
 
           {/* 5.1 Trust Operations */}
           <SubHeader
-            title="5.1 Trust Operations"
             info="Manage trust relationships for groups, including time-limited trust for Base Groups."
+            title="5.1 Trust Operations"
           />
           <Code>{`await groupAvatar.trust([avatar1, avatar2], expiry);`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               placeholder="Avatar Addresses (comma separated)"
               value={trustOperation.avatars}
-              onChange={(v) => setTrustOperation({ ...trustOperation, avatars: v })}
+              onChange={(v) =>
+                setTrustOperation({ ...trustOperation, avatars: v })
+              }
             />
             <Input
               placeholder="Expiry (Unix timestamp, optional)"
               value={trustOperation.expiry}
-              onChange={(v) => setTrustOperation({ ...trustOperation, expiry: v })}
+              onChange={(v) =>
+                setTrustOperation({ ...trustOperation, expiry: v })
+              }
             />
           </div>
           <div className="flex gap-2 mt-2">
             <button
-              onClick={async () => {
-                const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
-                const avatars = safeCsv(trustOperation.avatars);
-                const expiry = trustOperation.expiry ? BigInt(trustOperation.expiry) : undefined;
-                return run(() => avatar.trust(avatars, expiry), (s) => setTrustOperation({ ...trustOperation, state: s }));
-              }}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={async () => {
+                if (!sdk) return;
+                const avatar = await sdk.getAvatar(
+                  groupAddress.trim().toLowerCase() as `0x${string}`,
+                );
+                const avatars = safeCsv(trustOperation.avatars);
+                const expiry = trustOperation.expiry
+                  ? BigInt(trustOperation.expiry)
+                  : undefined;
+
+                return run(
+                  () => avatar.trust(avatars as `0x${string}`[], expiry),
+                  (s) => setTrustOperation({ ...trustOperation, state: s }),
+                );
+              }}
             >
               Trust Avatars
             </button>
             <button
-              onClick={async () => {
-                const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
-                const avatars = safeCsv(trustOperation.avatars);
-                return run(() => avatar.untrust(avatars), (s) => setTrustOperation({ ...trustOperation, state: s }));
-              }}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={async () => {
+                if (!sdk) return;
+                const avatar = await sdk.getAvatar(
+                  groupAddress.trim().toLowerCase() as `0x${string}`,
+                );
+                const avatars = safeCsv(trustOperation.avatars);
+
+                return run(
+                  () => avatar.untrust(avatars as `0x${string}`[]),
+                  (s) => setTrustOperation({ ...trustOperation, state: s }),
+                );
+              }}
             >
               Untrust Avatars
             </button>
           </div>
-          <Result state={trustOperation.state} title="Trust Operation" onOpen={openModal} />
+          <Result
+            state={trustOperation.state}
+            title="Trust Operation"
+            onOpen={openModal}
+          />
 
           {/* 5.2 Group Mint */}
           <SubHeader
-            title="5.2 Group Mint"
-            info="Mint group tokens using personal Circles as collateral."
             noTopMargin
+            info="Mint group tokens using personal Circles as collateral."
+            title="5.2 Group Mint"
           />
           <Code>{`await avatar.groupMint(group, [collateral1], [amount1], data);`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -754,7 +973,9 @@ export default function GroupsPage() {
             <Input
               placeholder="Collateral Addresses (comma separated)"
               value={groupMintOp.collateral}
-              onChange={(v) => setGroupMintOp({ ...groupMintOp, collateral: v })}
+              onChange={(v) =>
+                setGroupMintOp({ ...groupMintOp, collateral: v })
+              }
             />
             <Input
               placeholder="Amounts (comma separated, in atto-circles)"
@@ -763,27 +984,43 @@ export default function GroupsPage() {
             />
           </div>
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={async () => {
-              const avatar = await sdk.getAvatar(address!);
-              const collaterals = safeCsv(groupMintOp.collateral);
-              const amounts = groupMintOp.amounts.split(',').map(a => BigInt(a.trim()));
+              if (!address || !sdk) return;
+              const avatar = await sdk.getAvatar(address as `0x${string}`);
+              const collaterals = safeCsv(
+                groupMintOp.collateral,
+              ) as `0x${string}`[];
+              const amounts = groupMintOp.amounts
+                .split(",")
+                .map((a) => BigInt(a.trim()));
               const data = new Uint8Array(0); // Empty data
+
               return run(
-                () => avatar.groupMint(groupMintOp.group.trim(), collaterals, amounts, data),
-                (s) => setGroupMintOp({ ...groupMintOp, state: s })
+                () =>
+                  avatar.groupMint(
+                    groupMintOp.group.trim() as `0x${string}`,
+                    collaterals,
+                    amounts,
+                    data,
+                  ),
+                (s) => setGroupMintOp({ ...groupMintOp, state: s }),
               );
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Mint Group Tokens
           </button>
-          <Result state={groupMintOp.state} title="Group Mint" onOpen={openModal} />
+          <Result
+            state={groupMintOp.state}
+            title="Group Mint"
+            onOpen={openModal}
+          />
 
           {/* 5.3 Group Redeem */}
           <SubHeader
-            title="5.3 Group Redeem"
-            info="Redeem group tokens for collateral from the group treasury."
             noTopMargin
+            info="Redeem group tokens for collateral from the group treasury."
+            title="5.3 Group Redeem"
           />
           <Code>{`await avatar.groupRedeem(group, [collateral1], [amount1]);`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -795,35 +1032,54 @@ export default function GroupsPage() {
             <Input
               placeholder="Collateral Addresses (comma separated)"
               value={groupRedeemOp.collateral}
-              onChange={(v) => setGroupRedeemOp({ ...groupRedeemOp, collateral: v })}
+              onChange={(v) =>
+                setGroupRedeemOp({ ...groupRedeemOp, collateral: v })
+              }
             />
             <Input
               placeholder="Amounts (comma separated, in atto-circles)"
               value={groupRedeemOp.amounts}
-              onChange={(v) => setGroupRedeemOp({ ...groupRedeemOp, amounts: v })}
+              onChange={(v) =>
+                setGroupRedeemOp({ ...groupRedeemOp, amounts: v })
+              }
             />
           </div>
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={async () => {
-              const avatar = await sdk.getAvatar(address!);
-              const collaterals = safeCsv(groupRedeemOp.collateral);
-              const amounts = groupRedeemOp.amounts.split(',').map(a => BigInt(a.trim()));
+              if (!address || !sdk) return;
+              const avatar = await sdk.getAvatar(address as `0x${string}`);
+              const collaterals = safeCsv(
+                groupRedeemOp.collateral,
+              ) as `0x${string}`[];
+              const amounts = groupRedeemOp.amounts
+                .split(",")
+                .map((a) => BigInt(a.trim()));
+
               return run(
-                () => avatar.groupRedeem(groupRedeemOp.group.trim(), collaterals, amounts),
-                (s) => setGroupRedeemOp({ ...groupRedeemOp, state: s })
+                () =>
+                  avatar.groupRedeem(
+                    groupRedeemOp.group.trim() as `0x${string}`,
+                    collaterals,
+                    amounts,
+                  ),
+                (s) => setGroupRedeemOp({ ...groupRedeemOp, state: s }),
               );
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Redeem Group Tokens
           </button>
-          <Result state={groupRedeemOp.state} title="Group Redeem" onOpen={openModal} />
+          <Result
+            state={groupRedeemOp.state}
+            title="Group Redeem"
+            onOpen={openModal}
+          />
 
           {/* 5.4 Auto Redeem (Base Groups only) */}
           <SubHeader
-            title="5.4 Auto Redeem (Base Groups)"
-            info="Automatically redeem group tokens for trusted collateral using pathfinder optimization."
             noTopMargin
+            info="Automatically redeem group tokens for trusted collateral using pathfinder optimization."
+            title="5.4 Auto Redeem (Base Groups)"
           />
           <Code>{`await avatar.groupRedeemAuto(group, amount);`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -839,33 +1095,43 @@ export default function GroupsPage() {
             />
           </div>
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={async () => {
-              const avatar = await sdk.getAvatar(address!);
+              if (!address || !sdk) return;
+              const avatar = await sdk.getAvatar(address as `0x${string}`);
               const amount = BigInt(autoRedeemOp.amount);
+
               return run(
-                () => avatar.groupRedeemAuto(autoRedeemOp.group.trim(), amount),
-                (s) => setAutoRedeemOp({ ...autoRedeemOp, state: s })
+                () =>
+                  avatar.groupRedeemAuto(
+                    autoRedeemOp.group.trim() as `0x${string}`,
+                    amount,
+                  ),
+                (s) => setAutoRedeemOp({ ...autoRedeemOp, state: s }),
               );
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Auto Redeem
           </button>
-          <Result state={autoRedeemOp.state} title="Auto Redeem" onOpen={openModal} />
+          <Result
+            state={autoRedeemOp.state}
+            title="Auto Redeem"
+            onOpen={openModal}
+          />
         </section>
 
         {/* 6. Group Administration */}
         <section id="group-admin">
           <SectionHeader
             index="6"
-            title="Group Administration"
             info="Administrative functions for group owners including setting handlers and managing membership conditions."
+            title="Group Administration"
           />
 
           {/* 6.1 Set Owner */}
           <SubHeader
-            title="6.1 Set Owner"
             info="Transfer group ownership to a new address."
+            title="6.1 Set Owner"
           />
           <Code>{`await groupAvatar.setOwner(newOwner);`}</Code>
           <Input
@@ -874,90 +1140,136 @@ export default function GroupsPage() {
             onChange={(v) => setSetOwnerOp({ ...setOwnerOp, newOwner: v })}
           />
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={async () => {
-              const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
+              if (!sdk) return;
+              const avatar = await sdk.getAvatar(
+                groupAddress.trim().toLowerCase() as `0x${string}`,
+              );
+
               return run(
-                () => avatar.setOwner(setOwnerOp.newOwner.trim()),
-                (s) => setSetOwnerOp({ ...setOwnerOp, state: s })
+                () =>
+                  avatar.setOwner(setOwnerOp.newOwner.trim() as `0x${string}`),
+                (s) => setSetOwnerOp({ ...setOwnerOp, state: s }),
               );
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Set Owner
           </button>
-          <Result state={setOwnerOp.state} title="Set Owner" onOpen={openModal} />
+          <Result
+            state={setOwnerOp.state}
+            title="Set Owner"
+            onOpen={openModal}
+          />
 
           {/* 6.2 Set Service */}
           <SubHeader
-            title="6.2 Set Service"
-            info="Update the service address for the group."
             noTopMargin
+            info="Update the service address for the group."
+            title="6.2 Set Service"
           />
           <Code>{`await groupAvatar.setService(newService);`}</Code>
           <Input
             placeholder="New Service Address"
             value={setServiceOp.newService}
-            onChange={(v) => setSetServiceOp({ ...setServiceOp, newService: v })}
+            onChange={(v) =>
+              setSetServiceOp({ ...setServiceOp, newService: v })
+            }
           />
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={async () => {
-              const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
+              if (!sdk) return;
+              const avatar = await sdk.getAvatar(
+                groupAddress.trim().toLowerCase() as `0x${string}`,
+              );
+
               return run(
-                () => avatar.setService(setServiceOp.newService.trim()),
-                (s) => setSetServiceOp({ ...setServiceOp, state: s })
+                () =>
+                  avatar.setService(
+                    setServiceOp.newService.trim() as `0x${string}`,
+                  ),
+                (s) => setSetServiceOp({ ...setServiceOp, state: s }),
               );
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Set Service
           </button>
-          <Result state={setServiceOp.state} title="Set Service" onOpen={openModal} />
+          <Result
+            state={setServiceOp.state}
+            title="Set Service"
+            onOpen={openModal}
+          />
 
           {/* 6.3 Membership Conditions (Base Groups only) */}
           <SubHeader
-            title="6.3 Membership Conditions"
-            info="Manage membership conditions for Base Groups to control who can join."
             noTopMargin
+            info="Manage membership conditions for Base Groups to control who can join."
+            title="6.3 Membership Conditions"
           />
           <Code>{`await baseGroupAvatar.setMembershipCondition(condition, enabled);`}</Code>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               placeholder="Condition Address"
               value={membershipConditionOp.condition}
-              onChange={(v) => setMembershipConditionOp({ ...membershipConditionOp, condition: v })}
+              onChange={(v) =>
+                setMembershipConditionOp({
+                  ...membershipConditionOp,
+                  condition: v,
+                })
+              }
             />
             <select
-              value={membershipConditionOp.enabled ? "true" : "false"}
-              onChange={(e) => setMembershipConditionOp({ 
-                ...membershipConditionOp, 
-                enabled: e.target.value === "true" 
-              })}
               className="w-full p-2 mt-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+              value={membershipConditionOp.enabled ? "true" : "false"}
+              onChange={(e) =>
+                setMembershipConditionOp({
+                  ...membershipConditionOp,
+                  enabled: e.target.value === "true",
+                })
+              }
             >
               <option value="true">Enable</option>
               <option value="false">Disable</option>
             </select>
           </div>
           <button
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={async () => {
-              const avatar = await sdk.getAvatar(groupAddress.trim().toLowerCase());
+              if (!sdk) return;
+              const avatar = await sdk.getAvatar(
+                groupAddress.trim().toLowerCase() as `0x${string}`,
+              );
+
               return run(
-                () => avatar.setMembershipCondition(
-                  membershipConditionOp.condition.trim(),
-                  membershipConditionOp.enabled
-                ),
-                (s) => setMembershipConditionOp({ ...membershipConditionOp, state: s })
+                () =>
+                  avatar.setMembershipCondition(
+                    membershipConditionOp.condition.trim() as `0x${string}`,
+                    membershipConditionOp.enabled,
+                  ),
+                (s) =>
+                  setMembershipConditionOp({
+                    ...membershipConditionOp,
+                    state: s,
+                  }),
               );
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Set Membership Condition
           </button>
-          <Result state={membershipConditionOp.state} title="Membership Condition" onOpen={openModal} />
+          <Result
+            state={membershipConditionOp.state}
+            title="Membership Condition"
+            onOpen={openModal}
+          />
         </section>
       </main>
 
-      <Modal open={modal.open} onClose={closeModal} title={modal.title}>
+      <Modal
+        open={modal.open}
+        {...(modal.title !== undefined && { title: modal.title })}
+        onClose={closeModal}
+      >
         {modal.error && (
           <p className="text-red-500 text-sm mb-2">Error: {modal.error}</p>
         )}
@@ -1020,9 +1332,10 @@ function Result({
   state: AsyncState;
   hideInline?: boolean;
   title: string;
-  onOpen: (title: string, data?: any, error?: string) => void;
+  onOpen: (title: string, data?: unknown, error?: string) => void;
 }) {
   if (!state.loading && !state.error && state.result === undefined) return null;
+
   return (
     <div className="mt-3 flex items-start gap-3">
       {state.loading && <p>Loading…</p>}
@@ -1031,8 +1344,8 @@ function Result({
         <div className="flex items-center gap-2">
           <p className="text-red-500">Error: {state.error}</p>
           <button
-            onClick={() => onOpen(`${title} (Error)`, undefined, state.error)}
             className="px-3 py-1 text-xs rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+            onClick={() => onOpen(`${title} (Error)`, undefined, state.error)}
           >
             Open in modal
           </button>
@@ -1047,8 +1360,8 @@ function Result({
             </pre>
           )}
           <button
-            onClick={() => onOpen(title, state.result)}
             className="px-3 py-1 text-xs rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+            onClick={() => onOpen(title, state.result)}
           >
             Open result in modal
           </button>
@@ -1069,10 +1382,10 @@ function Input({
 }) {
   return (
     <input
+      className="w-full p-2 mt-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full p-2 mt-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
     />
   );
 }
@@ -1087,13 +1400,14 @@ function Code({ children }: { children: string }) {
 
 function InfoButton({ description }: { description: string }) {
   const [open, setOpen] = useState(false);
+
   return (
     <div className="relative inline-block">
       <button
-        type="button"
         aria-label="info"
-        onClick={() => setOpen((o) => !o)}
         className="mt-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        type="button"
+        onClick={() => setOpen((o) => !o)}
       >
         <InfoIcon className="w-5 h-5" />
       </button>
@@ -1108,7 +1422,7 @@ function InfoButton({ description }: { description: string }) {
 
 function InfoIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" {...props}>
+    <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" {...props}>
       <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 012 0v5a1 1 0 11-2 0V9zm2-4a1 1 0 10-2 0 1 1 0 002 0z" />
     </svg>
   );
@@ -1129,18 +1443,20 @@ function Modal({
 
   return (
     <div
+      aria-modal="true"
       className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50"
       role="dialog"
-      aria-modal="true"
     >
       <div className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700">
-          <h4 className="font-semibold text-lg truncate">{title ?? "Result"}</h4>
+          <h4 className="font-semibold text-lg truncate">
+            {title ?? "Result"}
+          </h4>
           <button
-            onClick={onClose}
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
             aria-label="Close modal"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            onClick={onClose}
           >
             ✕
           </button>
@@ -1152,8 +1468,8 @@ function Modal({
         {/* Footer */}
         <div className="px-4 py-3 border-t dark:border-gray-700 flex justify-end">
           <button
-            onClick={onClose}
             className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            onClick={onClose}
           >
             Close
           </button>

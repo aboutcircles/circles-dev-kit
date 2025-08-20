@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 
 type SvgIconProps = React.SVGProps<SVGSVGElement> & {
   size?: number;
@@ -13,14 +14,15 @@ export const Logo: React.FC<ImgIconProps> = ({
   width,
   height,
   alt = "Logo",
+  src: _,
   ...props
 }) => (
-  <img
-    src="/logo.svg"
-    width={width ?? size}
-    height={height ?? size}
-    alt={alt}
+  <Image
     {...props}
+    alt={alt}
+    height={Number(height ?? size)}
+    src="/logo.svg"
+    width={Number(width ?? size)}
   />
 );
 

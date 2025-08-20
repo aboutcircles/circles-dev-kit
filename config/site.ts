@@ -37,6 +37,5 @@ export const siteConfig = {
   ],
   links: {
     github: "https://github.com/aboutcircles/circles-dev-kit",
-
   },
 };

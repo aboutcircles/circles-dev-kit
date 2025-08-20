@@ -1,16 +1,20 @@
 import "@/styles/globals.css";
 import type { Metadata, Viewport } from "next";
+
 import clsx from "clsx";
 import NextLink from "next/link";
 
-import { Providers } from "./providers";
 import { CirclesProvider } from "../contexts/CirclesContext";
+
+import { Providers } from "./providers";
+
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 
 function getBaseUrl() {
   const candidate = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   return /^https?:\/\//.test(candidate) ? candidate : `https://${candidate}`;
 }
 
@@ -38,13 +42,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    site: siteConfig.links.twitter,
-    title: siteConfig.name,
-    description: siteConfig.description,
-    images: ["/og.png"],
-  },
 };
 
 export const viewport: Viewport = {
@@ -54,7 +51,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const year = new Date().getFullYear();
 
   return (
@@ -62,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={clsx(
           "min-h-screen text-foreground bg-background font-sans antialiased",
-          fontSans.variable
+          fontSans.variable,
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
@@ -76,16 +77,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
               <footer className="w-full py-6">
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 text-sm text-default-600 md:flex-row">
-                  <p>© {year} {siteConfig.name} • Built for the Circles ecosystem</p>
+                  <p>
+                    © {year} {siteConfig.name} • Built for the Circles
+                    ecosystem
+                  </p>
                   <div className="flex items-center gap-4">
                     <NextLink
-                      href={siteConfig.links.github}
-                      className="hover:text-primary"
                       aria-label="GitHub repository"
+                      className="hover:text-primary"
+                      href={siteConfig.links.github}
                     >
                       GitHub
                     </NextLink>
-                    <NextLink href="https://aboutcircles.com" className="hover:text-primary">
+                    <NextLink
+                      className="hover:text-primary"
+                      href="https://aboutcircles.com"
+                    >
                       aboutcircles.com
                     </NextLink>
                   </div>

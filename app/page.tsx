@@ -82,19 +82,19 @@ export default function Home() {
 
         <div className="flex gap-3 flex-wrap justify-center">
           <Link
-            href='/avatars'
             className={buttonStyles({
               color: "primary",
               radius: "full",
               variant: "shadow",
             })}
+            href="/avatars"
           >
             Get Started
           </Link>
           <Link
-            href={siteConfig.links.github}
-            className={buttonStyles({ variant: "bordered", radius: "full" })}
             isExternal
+            className={buttonStyles({ variant: "bordered", radius: "full" })}
+            href={siteConfig.links.github}
           >
             <GithubIcon size={20} />
             GitHub
@@ -102,11 +102,14 @@ export default function Home() {
         </div>
 
         {/* Quick start snippet */}
-        <Snippet hideCopyButton={false} hideSymbol variant="bordered" className="mt-8">
+        <Snippet
+          hideSymbol
+          className="mt-8"
+          hideCopyButton={false}
+          variant="bordered"
+        >
           <span>
-            <Code color="primary">
-              npx create-circles-dev-kit@latest
-            </Code>
+            <Code color="primary">npx create-circles-dev-kit@latest</Code>
           </span>
         </Snippet>
       </section>
@@ -133,20 +136,22 @@ function FeatureCard({ feature }: { feature: Feature }) {
       <h3 className="text-lg font-semibold flex items-center gap-2">
         {feature.name}
         {feature.comingSoon && (
-          <span className="text-xs bg-default-200 px-2 py-0.5 rounded-full">soon</span>
+          <span className="text-xs bg-default-200 px-2 py-0.5 rounded-full">
+            soon
+          </span>
         )}
       </h3>
       <p className="text-sm text-default-600 leading-5">{feature.blurb}</p>
 
       <div className="mt-auto pt-3">
         <Link
-          href={feature.docPath}
           className={buttonStyles({
             size: "sm",
             radius: "full",
             variant: "light",
             color: "primary",
           })}
+          href={feature.docPath}
         >
           Learn more →
         </Link>
