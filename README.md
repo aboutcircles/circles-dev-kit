@@ -1,4 +1,4 @@
-# Circles Dev Kit 
+# Circles Dev Kit
 
 ![](main.png)
 
@@ -10,6 +10,7 @@ This app focuses on practical, clickable examples—so you can connect a wallet 
 ## What’s inside
 
 ### 1) Avatars Lab (`/avatars`)
+
 - Discover: `sdk.data.getAvatarInfo(address)`
 - Avatar interface: `sdk.getAvatar(address)` (trust ops, balances, profile ops, transfers)
 - Profile upsert: `sdk.createOrUpdateProfile({ name, description })`
@@ -21,7 +22,9 @@ This app focuses on practical, clickable examples—so you can connect a wallet 
 - Filter V2 avatars: for a list of addresses via `sdk.data.getAvatarInfo`
 
 ### 2) JSON‑RPC Explorer (`/explorer`)
+
 Ready-made, copyable JSON payloads for Circles’ public RPC endpoints:
+
 - `circles_getTotalBalance`
 - `circlesV2_getTotalBalance`
 - `circles_getTokenBalances`
@@ -34,6 +37,7 @@ Ready-made, copyable JSON payloads for Circles’ public RPC endpoints:
 - `circles_tables`
 
 Each card shows:
+
 - One-click POST to the endpoint
 - The exact request body used
 - The raw JSON response in a modal
@@ -41,6 +45,7 @@ Each card shows:
 > Note: This uses `https://rpc.aboutcircles.com/*` endpoints directly from the client for simplicity while learning.
 
 ### 3) Groups Lab (`/groups`)
+
 - Register groups
   - Core Members Group (CMG) via `sdk.coreMembersGroupDeployer.deployGroup(name, symbol, description)`
   - Base Group via `sdk.baseGroupFactory.deployBaseGroup(mint, name, symbol, description)`
@@ -97,11 +102,13 @@ npm run dev
 ### Optional Configuration
 
 - **WalletConnect Support**: To enable WalletConnect as a wallet option, create a `.env.local` file with:
+
   ```bash
   NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
   ```
+
   Get your project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/).
-  
+
   **Note**: The app works fully without WalletConnect configuration. Available wallet options include MetaMask, Coinbase Wallet, and browser injected wallets.
 
 > The app uses a `CirclesContext` that wires your Circles SDK instance to Gnosis Chain mainnet only.
@@ -125,11 +132,10 @@ components/
 - A small `run(fn, setter)` helper wraps calls, updates UI, and captures errors.
 - Addresses are lower‑cased before calls to avoid checksum/casing issues.
 
-
-
 ## Extending the playground
 
 - **Add a new SDK example**
+
   1. Pick a page (e.g., `/avatars`) and add a new state bucket `{ input..., state: AsyncState }`.
   2. Add UI inputs + a button that calls `run(() => sdk.yourMethod(...), setState)`.
   3. Display with the shared `<Result />` component.
@@ -140,10 +146,8 @@ components/
 
 ---
 
-
 ## Tips & gotchas
 
 - **Network**: Many actions require Gnosis Chain. Switch your wallet network accordingly.
 - **Gas**: On‑chain actions (register, trust, mint/redeem, admin) need xDAI.
 - **Invitations**: Human V2 registration requires a valid inviter.
-

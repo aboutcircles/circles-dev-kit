@@ -13,7 +13,12 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "keywords": ["scaffold", "create-app", "nextjs", "circles"],
+  "keywords": [
+    "scaffold",
+    "create-app",
+    "nextjs",
+    "circles"
+  ],
   "repository": "https://github.com/aboutcircles/circles-dev-kit",
   "bugs": "https://github.com/aboutcircles/circles-dev-kit/issues",
   "publishConfig": {

@@ -6,21 +6,26 @@ import { spawnSync } from "child_process";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-
 const FIXED_REPO = "https://github.com/aboutcircles/circles-dev-kit";
-const FIXED_REF  = "main";
+const FIXED_REF = "main";
 
-const SUBDIR     = "";
+const SUBDIR = "";
 
-function log(m = "") { console.log(m); }
-function warn(m = "") { console.warn(m); }
-function err(m = "") { console.error(m); }
+function log(m = "") {
+  console.log(m);
+}
+function warn(m = "") {
+  console.warn(m);
+}
+function err(m = "") {
+  console.error(m);
+}
 
 function run(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, {
     stdio: "inherit",
     shell: process.platform === "win32",
-    ...opts
+    ...opts,
   });
   if (!opts.allowFail && r.status !== 0) process.exit(r.status || 1);
   return r;
@@ -29,23 +34,29 @@ function hasGit() {
   const r = spawnSync("git", ["--version"], { stdio: "ignore" });
   return r.status === 0;
 }
-function rmrf(p) { fs.rmSync(p, { recursive: true, force: true }); }
+function rmrf(p) {
+  fs.rmSync(p, { recursive: true, force: true });
+}
 function isDirEmpty(dir) {
   if (!fs.existsSync(dir)) return true;
-  const entries = fs.readdirSync(dir).filter(x => x !== "." && x !== "..");
+  const entries = fs.readdirSync(dir).filter((x) => x !== "." && x !== "..");
   return entries.length === 0;
 }
 function sanitizeName(name) {
-  return name
-    .trim()
-    .replace(/[\\/]/g, "-")
-    .toLowerCase()
-    .replace(/[\s_]+/g, "-")
-    .replace(/[^a-z0-9\-~.]+/g, "")
-    .replace(/^-+/, "")
-    .replace(/-+$/, "") || "circles-app";
+  return (
+    name
+      .trim()
+      .replace(/[\\/]/g, "-")
+      .toLowerCase()
+      .replace(/[\s_]+/g, "-")
+      .replace(/[^a-z0-9\-~.]+/g, "")
+      .replace(/^-+/, "")
+      .replace(/-+$/, "") || "circles-app"
+  );
 }
-function looksDifferentClean(orig, clean) { return orig.trim() !== clean; }
+function looksDifferentClean(orig, clean) {
+  return orig.trim() !== clean;
+}
 
 function updatePackageName(dest, newName) {
   const pjPath = path.join(dest, "package.json");
@@ -80,20 +91,39 @@ function detectPmFromEnv() {
 function installDeps(dest) {
   const pm = detectPmFromLockfiles(dest) || detectPmFromEnv();
   log(`\n📦 Installing dependencies with ${pm}...`);
-  const args = pm === "npm" ? ["install", "--no-fund", "--no-audit"]
-            : pm === "pnpm" ? ["install"]
-            : pm === "yarn" ? []
-            : pm === "bun" ? ["install"] : ["install"];
+  const args =
+    pm === "npm"
+      ? ["install", "--no-fund", "--no-audit"]
+      : pm === "pnpm"
+        ? ["install"]
+        : pm === "yarn"
+          ? []
+          : pm === "bun"
+            ? ["install"]
+            : ["install"];
   run(pm, args, { cwd: dest, allowFail: true });
 }
 function initFreshGit(dest) {
-  if (!hasGit()) { warn("⚠️  Git not found. Skipping git init."); return; }
+  if (!hasGit()) {
+    warn("⚠️  Git not found. Skipping git init.");
+    return;
+  }
   run("git", ["init"], { cwd: dest, allowFail: true });
-  run("git", ["config", "core.autocrlf", "input"], { cwd: dest, allowFail: true });
+  run("git", ["config", "core.autocrlf", "input"], {
+    cwd: dest,
+    allowFail: true,
+  });
   run("git", ["add", "-A"], { cwd: dest, allowFail: true });
-  const r = spawnSync("git", ["commit", "-m", "chore: initial commit"], { cwd: dest, stdio: "ignore" });
-  if (r.status === 0) log("🟢 Initialized a fresh git repo and created the first commit.");
-  else warn("⚠️  Could not create the initial commit (configure git user.name/email). Repo was initialized.");
+  const r = spawnSync("git", ["commit", "-m", "chore: initial commit"], {
+    cwd: dest,
+    stdio: "ignore",
+  });
+  if (r.status === 0)
+    log("🟢 Initialized a fresh git repo and created the first commit.");
+  else
+    warn(
+      "⚠️  Could not create the initial commit (configure git user.name/email). Repo was initialized.",
+    );
 }
 function copyTree(src, dest) {
   const filter = (p) => path.basename(p) !== ".git";
@@ -113,14 +143,14 @@ function copyTree(src, dest) {
 }
 function parseFlagsAndArg() {
   const args = process.argv.slice(2);
-  const nonFlags = args.filter(a => !a.startsWith("-"));
+  const nonFlags = args.filter((a) => !a.startsWith("-"));
   const folderArg = nonFlags[0];
-  const flags = new Set(args.filter(a => a.startsWith("--")));
+  const flags = new Set(args.filter((a) => a.startsWith("--")));
   return {
     folderArg,
     autoYes: flags.has("--yes"),
     noInstall: flags.has("--no-install"),
-    noGit: flags.has("--no-git")
+    noGit: flags.has("--no-git"),
   };
 }
 async function promptFolderName(defaultName = "circles-app") {
@@ -128,15 +158,23 @@ async function promptFolderName(defaultName = "circles-app") {
   try {
     const answer = await rl.question(`Project folder name (${defaultName}): `);
     return (answer || defaultName).trim();
-  } finally { rl.close(); }
+  } finally {
+    rl.close();
+  }
 }
 async function promptYesNo(message, def = "n") {
   const rl = readline.createInterface({ input, output });
   try {
-    const answer = (await rl.question(`${message} ${def === "y" ? "[Y/n]" : "[y/N]"} `)).trim().toLowerCase();
+    const answer = (
+      await rl.question(`${message} ${def === "y" ? "[Y/n]" : "[y/N]"} `)
+    )
+      .trim()
+      .toLowerCase();
     if (!answer) return def === "y";
     return ["y", "yes"].includes(answer);
-  } finally { rl.close(); }
+  } finally {
+    rl.close();
+  }
 }
 
 (async function main() {
@@ -161,7 +199,10 @@ async function promptYesNo(message, def = "n") {
   } else {
     projectNameClean = sanitizeName(rawName);
     if (looksDifferentClean(rawName, projectNameClean) && !autoYes) {
-      const ok = await promptYesNo(`Use sanitized name "${projectNameClean}" instead of "${rawName}"?`, "y");
+      const ok = await promptYesNo(
+        `Use sanitized name "${projectNameClean}" instead of "${rawName}"?`,
+        "y",
+      );
       if (!ok) {
         const retry = await promptFolderName(projectNameClean);
         projectNameClean = sanitizeName(retry);
@@ -174,16 +215,27 @@ async function promptYesNo(message, def = "n") {
   if (fs.existsSync(targetDir) && !isDirEmpty(targetDir)) {
     if (rawName === ".") {
       if (!autoYes) {
-        const proceed = await promptYesNo(`Directory "${targetDir}" is not empty. Proceed here?`, "n");
-        if (!proceed) { err("Aborted."); process.exit(1); }
+        const proceed = await promptYesNo(
+          `Directory "${targetDir}" is not empty. Proceed here?`,
+          "n",
+        );
+        if (!proceed) {
+          err("Aborted.");
+          process.exit(1);
+        }
       } else {
-        err(`❌ Current directory is not empty. Choose a new folder or rerun without --yes.`);
+        err(
+          `❌ Current directory is not empty. Choose a new folder or rerun without --yes.`,
+        );
         process.exit(1);
       }
     } else {
       if (!autoYes) {
         log(`\nDirectory "${targetDir}" already exists and is not empty.`);
-        const useDifferent = await promptYesNo("Enter a different folder name?", "y");
+        const useDifferent = await promptYesNo(
+          "Enter a different folder name?",
+          "y",
+        );
         if (useDifferent) {
           const retry = await promptFolderName("circles-app");
           const cleaned = sanitizeName(retry);
@@ -199,7 +251,9 @@ async function promptYesNo(message, def = "n") {
           process.exit(1);
         }
       } else {
-        err(`❌ Directory "${targetDir}" exists and is not empty. Choose a different name.`);
+        err(
+          `❌ Directory "${targetDir}" exists and is not empty. Choose a different name.`,
+        );
         process.exit(1);
       }
     }
@@ -207,14 +261,27 @@ async function promptYesNo(message, def = "n") {
     fs.mkdirSync(targetDir, { recursive: true });
   }
 
-  log(`\n🚀 Creating ${projectNameClean} from ${FIXED_REPO} (branch: ${FIXED_REF})...`);
+  log(
+    `\n🚀 Creating ${projectNameClean} from ${FIXED_REPO} (branch: ${FIXED_REF})...`,
+  );
 
   // Clone shallow into temp, then copy only SUBDIR (or root) without .git
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "circles-scaffold-"));
   const cloneDir = path.join(tmp, "clone");
   try {
-    const cloneArgs = ["clone", "--depth", "1", "--branch", FIXED_REF, FIXED_REPO, cloneDir];
-    const cloneRes = spawnSync("git", cloneArgs, { stdio: "inherit", shell: process.platform === "win32" });
+    const cloneArgs = [
+      "clone",
+      "--depth",
+      "1",
+      "--branch",
+      FIXED_REF,
+      FIXED_REPO,
+      cloneDir,
+    ];
+    const cloneRes = spawnSync("git", cloneArgs, {
+      stdio: "inherit",
+      shell: process.platform === "win32",
+    });
     if (cloneRes.status !== 0) {
       err("❌ Failed to clone the repository. Check network or repo URL.");
       process.exit(cloneRes.status || 1);
@@ -227,7 +294,8 @@ async function promptYesNo(message, def = "n") {
     }
 
     copyTree(srcRoot, targetDir);
-    if (fs.existsSync(path.join(targetDir, ".git"))) rmrf(path.join(targetDir, ".git"));
+    if (fs.existsSync(path.join(targetDir, ".git")))
+      rmrf(path.join(targetDir, ".git"));
 
     renameGitignore(targetDir);
     updatePackageName(targetDir, projectNameClean);
@@ -236,9 +304,14 @@ async function promptYesNo(message, def = "n") {
     if (!noGit) initFreshGit(targetDir);
 
     const pm = detectPmFromLockfiles(targetDir) || detectPmFromEnv();
-    log(`\n✅ Done! Next steps:\n  cd ${rawName === "." ? "." : projectNameClean}\n  ${noInstall ? `${pm} install\n  ` : ""}${pm} run dev\n`);
+    log(
+      `\n✅ Done! Next steps:\n  cd ${rawName === "." ? "." : projectNameClean}\n  ${noInstall ? `${pm} install\n  ` : ""}${pm} run dev\n`,
+    );
     log("Happy hacking! ✨");
   } finally {
     rmrf(tmp);
   }
-})().catch(e => { err(e?.stack || e?.message || String(e)); process.exit(1); });
+})().catch((e) => {
+  err(e?.stack || e?.message || String(e));
+  process.exit(1);
+});
