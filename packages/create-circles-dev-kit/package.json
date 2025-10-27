@@ -1,6 +1,6 @@
 {
   "name": "create-circles-dev-kit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scaffold a Circles Dev Kit  app from",
   "type": "module",
   "bin": {

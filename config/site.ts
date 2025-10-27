@@ -9,6 +9,10 @@ export const siteConfig = {
       href: "/",
     },
     {
+      label: "UI Components",
+      href: "/components",
+    },
+    {
       label: "Avatars",
       href: "/avatars",
     },
@@ -22,6 +26,10 @@ export const siteConfig = {
     },
   ],
   navMenuItems: [
+    {
+      label: "UI Components",
+      href: "/components",
+    },
     {
       label: "Avatars",
       href: "/avatars",

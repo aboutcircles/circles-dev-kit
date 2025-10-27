@@ -98,7 +98,7 @@ jobs:
           operation: refresh
           # library-name: "/owner/repo"   # optional; auto-detected
           # repo-url: "https://github.com/owner/repo"  # optional; auto-detected
-          timeout: 1800  # 30 min default; bump if you have very large docs
+          timeout: 1800 # 30 min default; bump if you have very large docs
 
       - name: Show result
         run: |
