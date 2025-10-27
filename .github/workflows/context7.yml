@@ -1,0 +1,63 @@
+name: Context7 Upsert
+
+on:
+  push:
+    branches: [master] # run on every commit to master
+  release:
+    types: [published] # run when a release is published (uses 'add')
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  context7:
+    name: Upsert Context7 Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: context7-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Default path: refresh docs on pushes and manual runs
+      - name: Context7 Refresh
+        if: github.event_name != 'release'
+        id: context7_refresh
+        uses: rennf93/upsert-context7@v1
+        with:
+          operation: refresh
+          # library-name: "/owner/repo"            # optional; auto-detected
+          # repo-url: "https://github.com/owner/repo"  # optional; auto-detected
+          timeout: 1800
+
+      # First-time path: add library on release publish
+      - name: Context7 Add (on release)
+        if: github.event_name == 'release'
+        id: context7_add
+        uses: rennf93/upsert-context7@v1
+        with:
+          operation: add
+          # repo-url: "https://github.com/owner/repo"  # optional; auto-detected
+          timeout: 1800
+
+      - name: Show result
+        run: |
+          echo "Refresh -> success: ${{ steps.context7_refresh.outputs.success }}"
+          echo "Refresh -> status:  ${{ steps.context7_refresh.outputs['status-code'] }}"
+          echo "Refresh -> message: ${{ steps.context7_refresh.outputs.message }}"
+          echo "Add     -> success: ${{ steps.context7_add.outputs.success }}"
+          echo "Add     -> status:  ${{ steps.context7_add.outputs['status-code'] }}"
+          echo "Add     -> message: ${{ steps.context7_add.outputs.message }}"
+
+      - name: Fail if Context7 upsert failed
+        if: >
+          (github.event_name == 'release' && steps.context7_add.outputs.success != 'true') ||
+          (github.event_name != 'release' && steps.context7_refresh.outputs.success != 'true')
+        run: |
+          echo "::error::Context7 upsert failed."
+          exit 1
