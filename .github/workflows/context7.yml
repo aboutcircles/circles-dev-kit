@@ -16,6 +16,7 @@ jobs:
         uses: rennf93/upsert-context7@1.1
         with:
           operation: refresh
+          library-name: "aboutcircles/circles-dev-kit"
 
       - name: Show result
         run: |
